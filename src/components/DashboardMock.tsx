@@ -22,6 +22,8 @@ export default function DashboardMock() {
   const [newUsername, setNewUsername] = useState<string>("");
   const [newEmail, setNewEmail] = useState<string>("");
   const [newEmailProvider, setNewEmailProvider] = useState<"Gmail" | "Hotmail" | "Outlook" | "Yahoo" | "Custom">("Gmail");
+  const [newEmailPassword, setNewEmailPassword] = useState<string>("");
+  const [newAutoSync, setNewAutoSync] = useState<boolean>(true);
   const [newProxy, setNewProxy] = useState<string>("");
   const [newLevel, setNewLevel] = useState<number>(1);
   const [newHasMaFile, setNewHasMaFile] = useState<boolean>(true);
@@ -189,11 +191,16 @@ export default function DashboardMock() {
 
     setAccounts((prev) => [...prev, newAcc]);
     addLog(`[ACCOUNT] Added slot ${newAcc.username} linked to ${newEmailProvider} (${emailToUse})`);
+    if (newEmailPassword) {
+      addLog(`[MAIL] Connected to ${newEmailProvider} IMAP server for ${emailToUse}. Auto-syncing drop reports.`);
+    }
     
     // Reset form states
     setNewUsername("");
     setNewEmail("");
     setNewEmailProvider("Gmail");
+    setNewEmailPassword("");
+    setNewAutoSync(true);
     setNewProxy("");
     setNewLevel(1);
     setNewHasMaFile(true);
@@ -765,26 +772,72 @@ export default function DashboardMock() {
                   </div>
                 </div>
 
-                {/* Email Address */}
-                <div>
-                  <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider mb-1.5 font-bold">
-                    Seller's Delivery Email (Optional)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-500">
-                      <Mail className="w-4 h-4" />
-                    </span>
+                {/* Email Address & Password Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider mb-1.5 font-bold">
+                      Seller's Delivery Email (Optional)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-500">
+                        <Mail className="w-4 h-4" />
+                      </span>
+                      <input
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        placeholder={newUsername ? `${newUsername.toLowerCase().replace(/[^a-z0-9]/g, '')}@${newEmailProvider.toLowerCase() === 'custom' ? 'custom-domain.net' : newEmailProvider.toLowerCase() + '.com'}` : `e.g. store@${newEmailProvider.toLowerCase() === 'custom' ? 'domain' : newEmailProvider.toLowerCase()}.com`}
+                        className="w-full bg-white/[0.03] border border-white/10 focus:border-brand-primary/50 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 transition-all font-sans"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider mb-1.5 font-bold">
+                      IMAP App Password / API Key (Optional)
+                    </label>
                     <input
-                      type="email"
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                      placeholder={newUsername ? `${newUsername.toLowerCase().replace(/[^a-z0-9]/g, '')}@${newEmailProvider.toLowerCase() === 'custom' ? 'custom-domain.net' : newEmailProvider.toLowerCase() + '.com'}` : `e.g. store@${newEmailProvider.toLowerCase() === 'custom' ? 'domain' : newEmailProvider.toLowerCase()}.com`}
-                      className="w-full bg-white/[0.03] border border-white/10 focus:border-brand-primary/50 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 transition-all font-sans"
+                      type="password"
+                      value={newEmailPassword}
+                      onChange={(e) => setNewEmailPassword(e.target.value)}
+                      placeholder="••••••••••••••••"
+                      className="w-full bg-white/[0.03] border border-white/10 focus:border-brand-primary/50 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 transition-all font-mono"
                     />
                   </div>
-                  <span className="text-[9px] text-gray-500 font-mono mt-1 block">
-                    If empty, a realistic email based on username will be auto-generated.
-                  </span>
+                </div>
+
+                {/* Info and checkbox about provider settings */}
+                <div className="p-3 rounded-xl bg-white/[0.01] border border-white/5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      IMAP Server: <strong className="text-gray-200">
+                        {newEmailProvider === "Gmail" ? "imap.gmail.com:993" :
+                         newEmailProvider === "Hotmail" ? "imap-mail.outlook.com:993" :
+                         newEmailProvider === "Outlook" ? "outlook.office365.com:993" :
+                         newEmailProvider === "Yahoo" ? "imap.mail.yahoo.com:993" :
+                         "custom.imap-server.net:993"}
+                      </strong>
+                    </span>
+                    <label className="flex items-center gap-1.5 text-[10px] font-mono text-gray-400 cursor-pointer">
+                      <input 
+                        type="checkbox"
+                        checked={newAutoSync}
+                        onChange={(e) => setNewAutoSync(e.target.checked)}
+                        className="rounded border-white/10 bg-white/5 text-brand-primary focus:ring-0 focus:ring-offset-0 w-3 h-3 cursor-pointer"
+                      />
+                      Auto-sync mail drops
+                    </label>
+                  </div>
+                  {newEmailProvider === "Gmail" && (
+                    <p className="text-[9px] text-red-400 font-mono leading-tight">
+                      * Gmail requires setting up an <strong>App Password</strong> in your Google Account security settings.
+                    </p>
+                  )}
+                  {newEmailProvider === "Yahoo" && (
+                    <p className="text-[9px] text-purple-400 font-mono leading-tight">
+                      * Yahoo Mail requires generating an <strong>App Password</strong> from your Yahoo Account Info page.
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
