@@ -33,6 +33,9 @@ export interface AccountStatus {
   xpPercent: number;
   status: "idle" | "in-game" | "queuing" | "offline";
   proxy: string;
+  sellerEmail?: string;
+  emailProvider?: "Gmail" | "Hotmail" | "Outlook" | "Yahoo" | "Custom";
+  hasMaFile?: boolean;
 }
 
 export interface DropEvent {

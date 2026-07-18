@@ -101,8 +101,8 @@ export default function Footer({ onScrollTo }: FooterProps) {
                 </button>
               </li>
               <li>
-                <a href="https://discord.gg/bobdevteam" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-brand-primary transition-colors">
-                  Discord Help Desk
+                <a href="https://t.me/kim_san145" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-brand-primary transition-colors">
+                  Telegram Help Desk
                 </a>
               </li>
               <li>

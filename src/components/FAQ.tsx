@@ -136,15 +136,15 @@ export default function FAQ() {
         <div className="mt-12 p-6 rounded-2xl bg-gradient-to-r from-brand-primary/5 via-brand-secondary/5 to-transparent border border-white/5 text-center flex flex-col md:flex-row items-center justify-between gap-4 text-left" id="faq-footer-callout">
           <div>
             <h4 className="font-display font-bold text-sm md:text-base text-white">Still have questions about PRO DIGITAL°?</h4>
-            <p className="font-sans text-xs text-gray-400 mt-1">Our live support team is active 24/7 inside our Discord server.</p>
+            <p className="font-sans text-xs text-gray-400 mt-1">Our live support team is active 24/7 inside our Telegram community.</p>
           </div>
           <a
-            href="https://discord.gg/bobdevteam"
+            href="https://t.me/kim_san145"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-5 py-2.5 rounded-xl font-sans font-bold text-xs bg-[#5865F2] hover:bg-[#5865F2]/90 text-white flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-black/30"
+            className="px-5 py-2.5 rounded-xl font-sans font-bold text-xs bg-[#24A1DE] hover:bg-[#24A1DE]/90 text-white flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-black/30"
           >
-            Join Discord Support
+            Join Telegram Support
             <ArrowRight className="w-3.5 h-3.5" />
           </a>
         </div>

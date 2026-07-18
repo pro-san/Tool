@@ -174,6 +174,9 @@ export const MOCK_ACCOUNTS: AccountStatus[] = [
     xpPercent: 78,
     status: "in-game",
     proxy: "185.220.101.44:3128",
+    sellerEmail: "dragonslayer.farm@gmail.com",
+    emailProvider: "Gmail",
+    hasMaFile: true,
   },
   {
     id: "acc-2",
@@ -184,6 +187,9 @@ export const MOCK_ACCOUNTS: AccountStatus[] = [
     xpPercent: 42,
     status: "queuing",
     proxy: "94.140.112.50:8080",
+    sellerEmail: "nova.gold.farm@hotmail.com",
+    emailProvider: "Hotmail",
+    hasMaFile: true,
   },
   {
     id: "acc-3",
@@ -194,6 +200,9 @@ export const MOCK_ACCOUNTS: AccountStatus[] = [
     xpPercent: 12,
     status: "idle",
     proxy: "45.138.22.119:1080",
+    sellerEmail: "bob.skins.outlet@outlook.com",
+    emailProvider: "Outlook",
+    hasMaFile: false,
   },
   {
     id: "acc-4",
@@ -204,6 +213,9 @@ export const MOCK_ACCOUNTS: AccountStatus[] = [
     xpPercent: 95,
     status: "in-game",
     proxy: "185.220.101.45:3128",
+    sellerEmail: "asimov.bulk.04@yahoo.com",
+    emailProvider: "Yahoo",
+    hasMaFile: true,
   },
   {
     id: "acc-5",
@@ -214,6 +226,9 @@ export const MOCK_ACCOUNTS: AccountStatus[] = [
     xpPercent: 60,
     status: "queuing",
     proxy: "109.252.75.12:8888",
+    sellerEmail: "neon.rider.farm@custom-domain.net",
+    emailProvider: "Custom",
+    hasMaFile: true,
   }
 ];
 
