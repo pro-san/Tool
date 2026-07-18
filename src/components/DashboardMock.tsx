@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FormEvent } from "react";
+import React, { useState, useEffect, useRef, FormEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { MOCK_ACCOUNTS, MOCK_DROPS } from "../data";
 import { AccountStatus, DropEvent } from "../types";
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 export default function DashboardMock() {
+  const logsContainerRef = useRef<HTMLDivElement>(null);
   const [accounts, setAccounts] = useState<AccountStatus[]>(MOCK_ACCOUNTS);
   const [drops, setDrops] = useState<DropEvent[]>(MOCK_DROPS);
   const [isRunning, setIsRunning] = useState<boolean>(true);
@@ -140,6 +141,16 @@ export default function DashboardMock() {
     "[PRO-DIGITAL] All lobbies synchronized. Standing by for start command..."
   ]);
 
+  // Auto-scroll the logs console to the bottom when a new entry is added
+  useEffect(() => {
+    if (logsContainerRef.current) {
+      logsContainerRef.current.scrollTo({
+        top: logsContainerRef.current.scrollHeight,
+        behavior: "smooth"
+      });
+    }
+  }, [logMessages]);
+
   // Simulate active background operations when 'isRunning' is true
   useEffect(() => {
     if (!isRunning) return;
@@ -226,7 +237,7 @@ export default function DashboardMock() {
 
   const addLog = (msg: string) => {
     const time = new Date().toLocaleTimeString();
-    setLogMessages((prev) => [`[${time}] ${msg}`, ...prev.slice(0, 18)]);
+    setLogMessages((prev) => [...prev.slice(-49), `[${time}] ${msg}`]);
   };
 
   const triggerSimulatedDrop = (username: string) => {
@@ -1654,7 +1665,10 @@ export default function DashboardMock() {
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 </div>
 
-                <div className="font-mono text-[10px] md:text-[11px] leading-relaxed text-gray-400 overflow-y-auto space-y-2 flex-1 mt-3.5 h-[180px] scrollbar-thin pr-1 flex flex-col-reverse">
+                <div 
+                  ref={logsContainerRef}
+                  className="font-mono text-[10px] md:text-[11px] leading-relaxed text-gray-400 overflow-y-auto space-y-2 flex-1 mt-3.5 h-[180px] scrollbar-thin pr-1"
+                >
                   {logMessages.map((log, idx) => (
                     <div 
                       key={idx} 
