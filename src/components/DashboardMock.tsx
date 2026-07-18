@@ -5,7 +5,9 @@ import { AccountStatus, DropEvent } from "../types";
 import { 
   Play, Pause, Plus, RefreshCw, AlertCircle, Info, Check, 
   Terminal, ShieldCheck, Database, Server, Compass, Layers,
-  Coins, Package, Mail, X, User, Shield, Download
+  Coins, Package, Mail, X, User, Shield, Download,
+  Globe, Wifi, Trash2, Activity, CheckCircle2, XCircle,
+  Lock, Key, Eye, Settings, ExternalLink
 } from "lucide-react";
 
 export default function DashboardMock() {
@@ -27,6 +29,105 @@ export default function DashboardMock() {
   const [newProxy, setNewProxy] = useState<string>("");
   const [newLevel, setNewLevel] = useState<number>(1);
   const [newHasMaFile, setNewHasMaFile] = useState<boolean>(true);
+
+  // Workspace active tab (Supports AUTOMATION SLOTS, PROXY WORKSPACE, and the brand-new MAIL WORKSPACE)
+  const [activeTab, setActiveTab] = useState<"accounts" | "proxies" | "mail">("accounts");
+
+  interface SyncedMail {
+    id: string;
+    accountUsername: string;
+    sender: string;
+    recipient: string;
+    subject: string;
+    body: string;
+    code?: string;
+    receivedTime: string;
+    status: "synced" | "processing" | "verification_extracted" | "action_completed";
+    provider: "Gmail" | "Hotmail" | "Outlook" | "Yahoo" | "Custom";
+  }
+
+  const [syncedMails, setSyncedMails] = useState<SyncedMail[]>([
+    {
+      id: "mail-1",
+      accountUsername: "Asimov_Farmer_01",
+      sender: "noreply@steampowered.com",
+      recipient: "asimov01@gmail.com",
+      subject: "Your Steam Guard Code",
+      body: "Here is the Steam Guard code you need to login to your account. Your code is: J89TX\n\nIf you did not request this code, please ignore this message. Someone may be trying to access your Steam account.",
+      code: "J89TX",
+      receivedTime: "10 mins ago",
+      status: "verification_extracted",
+      provider: "Gmail"
+    },
+    {
+      id: "mail-2",
+      accountUsername: "Gaben_Shield_2FA",
+      sender: "communitymarket@steampowered.com",
+      recipient: "gaben2fa@yahoo.com",
+      subject: "Steam Community Market listing confirmation",
+      body: "You have listed a Kilowatt Case on the Steam Community Market for $0.95. Click here to confirm the sale and list it live on the marketplace. Confirmation Token: CH-8893",
+      code: "CH-8893",
+      receivedTime: "24 mins ago",
+      status: "action_completed",
+      provider: "Yahoo"
+    },
+    {
+      id: "mail-3",
+      accountUsername: "Dragon_Lore_Alt",
+      sender: "noreply@steampowered.com",
+      recipient: "dragonalt@outlook.com",
+      subject: "Your Steam Guard Code",
+      body: "Here is the Steam Guard code you need to login to your account. Your code is: QR89W\n\nDo not share this code with anyone.",
+      code: "QR89W",
+      receivedTime: "1 hour ago",
+      status: "verification_extracted",
+      provider: "Outlook"
+    },
+    {
+      id: "mail-4",
+      accountUsername: "Vandal_Collector",
+      sender: "noreply@steampowered.com",
+      recipient: "vandal_coll@hotmail.com",
+      subject: "New login to Steam from a new device",
+      body: "A login attempt was made using your password from IP 185.220.101.44. Please enter code: KF6B7 to authorize access.",
+      code: "KF6B7",
+      receivedTime: "3 hours ago",
+      status: "synced",
+      provider: "Hotmail"
+    }
+  ]);
+
+  const [isMailTesting, setIsMailTesting] = useState<string | null>(null);
+  const [selectedMailDetail, setSelectedMailDetail] = useState<SyncedMail | null>(null);
+  const [selectedFilterProvider, setSelectedFilterProvider] = useState<"All" | "Gmail" | "Hotmail" | "Outlook" | "Yahoo" | "Custom">("All");
+  const [searchMailQuery, setSearchMailQuery] = useState<string>("");
+
+  interface ProxyItem {
+    id: string;
+    ip: string;
+    port: string;
+    type: "HTTP" | "HTTPS" | "SOCKS4" | "SOCKS5";
+    username?: string;
+    password?: string;
+    status: "idle" | "testing" | "online" | "offline";
+    latency?: number;
+    assignedTo?: string; // Account ID or "None"
+  }
+
+  const [proxies, setProxies] = useState<ProxyItem[]>([
+    { id: "prx-1", ip: "185.220.101.44", port: "3128", type: "HTTP", status: "online", latency: 45, assignedTo: "acc-1" },
+    { id: "prx-2", ip: "94.140.112.50", port: "8080", type: "HTTP", status: "online", latency: 68, assignedTo: "acc-2" },
+    { id: "prx-3", ip: "45.138.22.119", port: "1080", type: "SOCKS5", status: "online", latency: 120, assignedTo: "acc-3" },
+    { id: "prx-4", ip: "185.220.101.45", port: "3128", type: "HTTP", status: "online", latency: 52, assignedTo: "acc-4" },
+    { id: "prx-5", ip: "109.252.75.12", port: "8888", type: "SOCKS4", status: "online", latency: 89, assignedTo: "acc-5" },
+  ]);
+
+  const [proxyIp, setProxyIp] = useState<string>("");
+  const [proxyPort, setProxyPort] = useState<string>("");
+  const [proxyType, setProxyType] = useState<"HTTP" | "HTTPS" | "SOCKS4" | "SOCKS5">("SOCKS5");
+  const [proxyUsername, setProxyUsername] = useState<string>("");
+  const [proxyPassword, setProxyPassword] = useState<string>("");
+  const [proxyAssignedAccount, setProxyAssignedAccount] = useState<string>("None");
 
   const [logMessages, setLogMessages] = useState<string[]>([
     "[SYSTEM] PRO DIGITAL° launcher initialized successfully.",
@@ -205,6 +306,205 @@ export default function DashboardMock() {
     setNewLevel(1);
     setNewHasMaFile(true);
     setIsAddModalOpen(false);
+  };
+
+  const handleTestProxy = (id: string) => {
+    const proxy = proxies.find(p => p.id === id);
+    if (!proxy) return;
+
+    addLog(`[PROXIES] Initializing connection test to ${proxy.type} proxy ${proxy.ip}:${proxy.port}...`);
+    
+    setProxies(prev => prev.map(p => p.id === id ? { ...p, status: "testing" } : p));
+
+    setTimeout(() => {
+      const isOnline = Math.random() > 0.12; // 88% chance online
+      const simulatedLatency = Math.floor(Math.random() * 120) + 15;
+      
+      setProxies(prev => prev.map(p => p.id === id ? { 
+        ...p, 
+        status: isOnline ? "online" : "offline", 
+        latency: isOnline ? simulatedLatency : undefined 
+      } : p));
+
+      if (isOnline) {
+        addLog(`[PROXIES] Connection SUCCESS for ${proxy.ip}:${proxy.port}. Latency: ${simulatedLatency}ms.`);
+      } else {
+        addLog(`[PROXIES] Connection FAILED for ${proxy.ip}:${proxy.port}. Timeout reached (5000ms).`);
+      }
+    }, 1200);
+  };
+
+  const handleTestAllProxies = () => {
+    addLog(`[PROXIES] Initializing batch diagnostic for all configured proxy endpoints...`);
+    setProxies(prev => prev.map(p => ({ ...p, status: "testing" })));
+
+    setTimeout(() => {
+      setProxies(prev => prev.map(p => {
+        const isOnline = Math.random() > 0.12;
+        const simulatedLatency = Math.floor(Math.random() * 100) + 20;
+        return {
+          ...p,
+          status: isOnline ? "online" : "offline",
+          latency: isOnline ? simulatedLatency : undefined
+        };
+      }));
+      addLog(`[PROXIES] Batch diagnostics complete. System proxy status updated.`);
+    }, 1500);
+  };
+
+  const handleAddProxy = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!proxyIp.trim() || !proxyPort.trim()) return;
+
+    const newPrx: ProxyItem = {
+      id: `prx-${Date.now()}`,
+      ip: proxyIp.trim(),
+      port: proxyPort.trim(),
+      type: proxyType,
+      username: proxyUsername.trim() || undefined,
+      password: proxyPassword.trim() || undefined,
+      status: "idle",
+      assignedTo: proxyAssignedAccount,
+    };
+
+    setProxies(prev => [...prev, newPrx]);
+    addLog(`[PROXIES] Added ${proxyType} proxy endpoint: ${newPrx.ip}:${newPrx.port}`);
+
+    // If assigned to an account, let's update that account's proxy configuration
+    if (proxyAssignedAccount !== "None") {
+      setAccounts(prev => prev.map(acc => {
+        if (acc.id === proxyAssignedAccount) {
+          addLog(`[ACCOUNT] Proxy for ${acc.username} has been re-routed to ${newPrx.ip}:${newPrx.port}`);
+          return { ...acc, proxy: `${newPrx.ip}:${newPrx.port}` };
+        }
+        return acc;
+      }));
+    }
+
+    // Reset fields
+    setProxyIp("");
+    setProxyPort("");
+    setProxyType("SOCKS5");
+    setProxyUsername("");
+    setProxyPassword("");
+    setProxyAssignedAccount("None");
+  };
+
+  const handleDeleteProxy = (id: string) => {
+    const proxyToDelete = proxies.find(p => p.id === id);
+    if (!proxyToDelete) return;
+
+    setProxies(prev => prev.filter(p => p.id !== id));
+    addLog(`[PROXIES] Deleted proxy ${proxyToDelete.ip}:${proxyToDelete.port}`);
+
+    // Clear reference in accounts if it was assigned to one
+    if (proxyToDelete.assignedTo && proxyToDelete.assignedTo !== "None") {
+      setAccounts(prev => prev.map(acc => {
+        if (acc.id === proxyToDelete.assignedTo) {
+          addLog(`[ACCOUNT] Proxy reference cleared for ${acc.username}`);
+          return { ...acc, proxy: "Unassigned" };
+        }
+        return acc;
+      }));
+    }
+  };
+
+  const handleAssignProxyToAccount = (proxyId: string, accountId: string) => {
+    setProxies(prev => prev.map(p => {
+      if (p.id === proxyId) {
+        return { ...p, assignedTo: accountId };
+      }
+      // If it was assigned to this account and we are assigning to someone else, clear it
+      if (p.assignedTo === accountId && accountId !== "None") {
+        return { ...p, assignedTo: "None" };
+      }
+      return p;
+    }));
+
+    if (accountId !== "None") {
+      const proxyObj = proxies.find(p => p.id === proxyId);
+      const accObj = accounts.find(a => a.id === accountId);
+      if (proxyObj && accObj) {
+        setAccounts(prev => prev.map(acc => {
+          if (acc.id === accountId) {
+            return { ...acc, proxy: `${proxyObj.ip}:${proxyObj.port}` };
+          }
+          return acc;
+        }));
+        addLog(`[PROXIES] Assigned ${proxyObj.ip}:${proxyObj.port} to ${accObj.username}`);
+      }
+    } else {
+      // Find the proxy and see who it was assigned to, then clear that account's proxy
+      const proxyObj = proxies.find(p => p.id === proxyId);
+      if (proxyObj && proxyObj.assignedTo && proxyObj.assignedTo !== "None") {
+        setAccounts(prev => prev.map(acc => {
+          if (acc.id === proxyObj.assignedTo) {
+            return { ...acc, proxy: "Unassigned" };
+          }
+          return acc;
+        }));
+      }
+    }
+  };
+
+  const handleTestMailConnection = (mailId: string) => {
+    const mail = syncedMails.find(m => m.id === mailId);
+    if (!mail) return;
+
+    setIsMailTesting(mailId);
+    addLog(`[MAIL] Testing IMAP connection to imap.${mail.provider.toLowerCase() === "hotmail" ? "live" : mail.provider.toLowerCase() === "custom" ? "imap-server" : mail.provider.toLowerCase()}.com:993 for ${mail.recipient}...`);
+    
+    setTimeout(() => {
+      setIsMailTesting(null);
+      addLog(`[MAIL] SUCCESS: IMAP Connection established for ${mail.recipient}. Authentication OK.`);
+    }, 1200);
+  };
+
+  const handleTestAccountMailConnection = (accId: string, email: string, provider: string) => {
+    setIsMailTesting(accId);
+    addLog(`[MAIL] Connecting to ${provider} server (imap-ssl) for ${email}...`);
+    
+    setTimeout(() => {
+      setIsMailTesting(null);
+      addLog(`[MAIL] Connection SUCCESS for ${email}. Checked INBOX: 0 new unread verification codes found.`);
+    }, 1300);
+  };
+
+  const handleForceSyncMails = () => {
+    addLog(`[MAIL] Initializing batch synchronizer across Gmail, Hotmail, Outlook, Yahoo IMAP servers...`);
+    setIsMailTesting("all");
+    
+    setTimeout(() => {
+      setIsMailTesting(null);
+      // Generate a brand new mock verification code email dynamically
+      const randomSeed = Math.floor(Math.random() * 90000) + 10000;
+      const codes = ["G-88129", "S-91102", "STEAM_771A", "C-8819", "A-5541"];
+      const code = codes[Math.floor(Math.random() * codes.length)] + randomSeed.toString().substring(0, 2);
+      const acc = accounts[Math.floor(Math.random() * accounts.length)] || { username: "Asimov_Farmer_01", sellerEmail: "asimov01@gmail.com", emailProvider: "Gmail" };
+      const provider = acc.emailProvider || "Gmail";
+      const email = acc.sellerEmail || "farmer@gmail.com";
+
+      const newMail: SyncedMail = {
+        id: `mail-${Date.now()}`,
+        accountUsername: acc.username,
+        sender: "noreply@steampowered.com",
+        recipient: email,
+        subject: "Your Steam Guard Code",
+        body: `Here is the Steam Guard code you need to login to your account. Your code is: ${code}\n\nDo not share this code with anyone. IP: 185.220.101.${Math.floor(Math.random() * 254)}`,
+        code: code,
+        receivedTime: "Just now",
+        status: "verification_extracted",
+        provider: provider as any
+      };
+
+      setSyncedMails(prev => [newMail, ...prev]);
+      addLog(`[MAIL] Successfully synced 1 new message for ${acc.username}. Extracted verification token: ${code}`);
+    }, 1500);
+  };
+
+  const handleDeleteMail = (id: string) => {
+    setSyncedMails(prev => prev.filter(m => m.id !== id));
+    addLog(`[MAIL] Cleared local cache record for mail log entry ${id}`);
   };
 
   const handleDownloadConfig = () => {
@@ -433,124 +733,415 @@ export default function DashboardMock() {
 
             {/* Account List (Left & Center Columns) */}
             <div className="lg:col-span-8 space-y-6" id="dashboard-accounts-table">
-              <div className="bg-[#050609]/80 border border-white/5 rounded-2xl p-4 md:p-6 shadow-md overflow-hidden">
-                <div className="flex items-center justify-between mb-5">
-                  <h3 className="font-display font-bold text-sm md:text-base text-white flex items-center gap-2">
-                    <Server className="w-4 h-4 text-brand-primary animate-pulse" />
-                    Cluster Account Automation Slots
-                  </h3>
-                  <button 
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="px-3 py-1.5 rounded-lg bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-[11px] font-mono font-bold border border-brand-primary/20 flex items-center gap-1 transition-all cursor-pointer"
-                    id="btn-open-add-account"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Add Seller Account
-                  </button>
-                </div>
-                
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left font-sans text-xs md:text-sm">
-                    <thead>
-                      <tr className="border-b border-white/5 text-gray-500 font-mono text-[10px] uppercase">
-                        <th className="pb-3 pl-2">Steam Identity / Seller Email</th>
-                        <th className="pb-3">Activity</th>
-                        <th className="pb-3">Weekly XP Progress</th>
-                        <th className="pb-3 text-center">Drops</th>
-                        <th className="pb-3 text-right pr-2">Proxy Address</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {accounts.map((acc) => (
-                        <tr key={acc.id} className="hover:bg-white/[0.01] transition-colors">
-                          {/* Username, Avatar & Linked Email */}
-                          <td className="py-3.5 pl-2">
-                            <div className="flex items-start gap-2.5">
-                              <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-mono font-bold text-brand-primary text-xs shrink-0 mt-0.5">
-                                {acc.username[0]}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-semibold text-white leading-tight truncate">
-                                    {acc.username}
-                                  </span>
-                                  {acc.hasMaFile && (
-                                    <span className="px-1 py-0.2 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-mono font-bold shrink-0" title="Steam Guard maFile Uploaded">
-                                      2FA
+              {/* Premium Tab Bar Navigation */}
+              <div className="flex items-center gap-2 border-b border-white/5 pb-2" id="dashboard-tabs">
+                <button
+                  onClick={() => setActiveTab("accounts")}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-2 border ${
+                    activeTab === "accounts"
+                      ? "bg-brand-primary/10 border-brand-primary/20 text-brand-primary"
+                      : "bg-transparent border-transparent text-gray-400 hover:text-white"
+                  }`}
+                  id="tab-btn-accounts"
+                >
+                  <Server className="w-3.5 h-3.5" />
+                  AUTOMATION SLOTS ({accounts.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab("proxies")}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-2 border ${
+                    activeTab === "proxies"
+                      ? "bg-brand-primary/10 border-brand-primary/20 text-brand-primary"
+                      : "bg-transparent border-transparent text-gray-400 hover:text-white"
+                  }`}
+                  id="tab-btn-proxies"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  PROXY WORKSPACE ({proxies.length})
+                </button>
+              </div>
+
+              {activeTab === "accounts" ? (
+                <div className="bg-[#050609]/80 border border-white/5 rounded-2xl p-4 md:p-6 shadow-md overflow-hidden">
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="font-display font-bold text-sm md:text-base text-white flex items-center gap-2">
+                      <Server className="w-4 h-4 text-brand-primary animate-pulse" />
+                      Cluster Account Automation Slots
+                    </h3>
+                    <button 
+                      onClick={() => setIsAddModalOpen(true)}
+                      className="px-3 py-1.5 rounded-lg bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-[11px] font-mono font-bold border border-brand-primary/20 flex items-center gap-1 transition-all cursor-pointer"
+                      id="btn-open-add-account"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add Seller Account
+                    </button>
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left font-sans text-xs md:text-sm">
+                      <thead>
+                        <tr className="border-b border-white/5 text-gray-500 font-mono text-[10px] uppercase">
+                          <th className="pb-3 pl-2">Steam Identity / Seller Email</th>
+                          <th className="pb-3">Activity</th>
+                          <th className="pb-3">Weekly XP Progress</th>
+                          <th className="pb-3 text-center">Drops</th>
+                          <th className="pb-3 text-right pr-2">Proxy Address</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {accounts.map((acc) => (
+                          <tr key={acc.id} className="hover:bg-white/[0.01] transition-colors">
+                            {/* Username, Avatar & Linked Email */}
+                            <td className="py-3.5 pl-2">
+                              <div className="flex items-start gap-2.5">
+                                <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-mono font-bold text-brand-primary text-xs shrink-0 mt-0.5">
+                                  {acc.username[0]}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-semibold text-white leading-tight truncate">
+                                      {acc.username}
                                     </span>
+                                    {acc.hasMaFile && (
+                                      <span className="px-1 py-0.2 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-mono font-bold shrink-0" title="Steam Guard maFile Uploaded">
+                                        2FA
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] text-gray-500 font-mono block mt-0.5">
+                                    Level {acc.level} Account
+                                  </span>
+                                  
+                                  {acc.sellerEmail && (
+                                    <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-gray-400 font-mono">
+                                      <span className={`inline-flex items-center px-1 py-0.2 rounded text-[8px] font-bold ${
+                                        acc.emailProvider === "Gmail" ? "bg-red-500/10 text-red-400 border border-red-500/15" :
+                                        acc.emailProvider === "Hotmail" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/15" :
+                                        acc.emailProvider === "Outlook" ? "bg-blue-500/10 text-blue-400 border border-blue-500/15" :
+                                        acc.emailProvider === "Yahoo" ? "bg-purple-500/10 text-purple-400 border border-purple-500/15" :
+                                        "bg-white/5 text-gray-300 border border-white/10"
+                                      }`}>
+                                        {acc.emailProvider}
+                                      </span>
+                                      <span className="truncate max-w-[140px] md:max-w-[180px] text-gray-400 hover:text-white transition-colors" title={acc.sellerEmail}>
+                                        {acc.sellerEmail}
+                                      </span>
+                                    </div>
                                   )}
                                 </div>
-                                <span className="text-[10px] text-gray-500 font-mono block mt-0.5">
-                                  Level {acc.level} Account
-                                </span>
-                                
-                                {acc.sellerEmail && (
-                                  <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-gray-400 font-mono">
-                                    <span className={`inline-flex items-center px-1 py-0.2 rounded text-[8px] font-bold ${
-                                      acc.emailProvider === "Gmail" ? "bg-red-500/10 text-red-400 border border-red-500/15" :
-                                      acc.emailProvider === "Hotmail" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/15" :
-                                      acc.emailProvider === "Outlook" ? "bg-blue-500/10 text-blue-400 border border-blue-500/15" :
-                                      acc.emailProvider === "Yahoo" ? "bg-purple-500/10 text-purple-400 border border-purple-500/15" :
-                                      "bg-white/5 text-gray-300 border border-white/10"
-                                    }`}>
-                                      {acc.emailProvider}
-                                    </span>
-                                    <span className="truncate max-w-[140px] md:max-w-[180px] text-gray-400 hover:text-white transition-colors" title={acc.sellerEmail}>
-                                      {acc.sellerEmail}
-                                    </span>
-                                  </div>
-                                )}
                               </div>
-                            </div>
-                          </td>
+                            </td>
 
-                          {/* Activity & Status badge */}
-                          <td className="py-3.5">
-                            <div className="flex items-center gap-2">
-                              <span className={`w-2 h-2 rounded-full ${
-                                acc.status === "in-game" ? "bg-brand-primary animate-pulse" :
-                                acc.status === "queuing" ? "bg-yellow-400 animate-ping" :
-                                acc.status === "idle" ? "bg-brand-secondary" : "bg-gray-600"
-                              }`}></span>
-                              <div>
-                                <span className="block font-medium text-gray-200">
-                                  {acc.currentActivity}
+                            {/* Activity & Status badge */}
+                            <td className="py-3.5">
+                              <div className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full ${
+                                  acc.status === "in-game" ? "bg-brand-primary animate-pulse" :
+                                  acc.status === "queuing" ? "bg-yellow-400 animate-ping" :
+                                  acc.status === "idle" ? "bg-brand-secondary" : "bg-gray-600"
+                                }`}></span>
+                                <div>
+                                  <span className="block font-medium text-gray-200">
+                                    {acc.currentActivity}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* XP Bar */}
+                            <td className="py-3.5 w-1/4">
+                              <div className="flex items-center gap-2">
+                                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                  <motion.div 
+                                    className="h-full bg-brand-primary"
+                                    animate={{ width: `${acc.xpPercent}%` }}
+                                    transition={{ duration: 0.5 }}
+                                  />
+                                </div>
+                                <span className="font-mono text-[10px] text-gray-400 font-bold shrink-0">
+                                  {acc.xpPercent}%
                                 </span>
                               </div>
-                            </div>
-                          </td>
+                            </td>
 
-                          {/* XP Bar */}
-                          <td className="py-3.5 w-1/4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <motion.div 
-                                  className="h-full bg-brand-primary"
-                                  animate={{ width: `${acc.xpPercent}%` }}
-                                  transition={{ duration: 0.5 }}
-                                />
-                              </div>
-                              <span className="font-mono text-[10px] text-gray-400 font-bold shrink-0">
-                                {acc.xpPercent}%
-                              </span>
-                            </div>
-                          </td>
+                            {/* Cases Farmed count */}
+                            <td className="py-3.5 text-center font-mono font-bold text-white text-xs">
+                              {acc.casesFarmed}
+                            </td>
 
-                          {/* Cases Farmed count */}
-                          <td className="py-3.5 text-center font-mono font-bold text-white text-xs">
-                            {acc.casesFarmed}
-                          </td>
-
-                          {/* Proxy */}
-                          <td className="py-3.5 text-right font-mono text-[11px] text-gray-500 pr-2">
-                            {acc.proxy}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                            {/* Proxy */}
+                            <td className="py-3.5 text-right font-mono text-[11px] text-gray-500 pr-2">
+                              {acc.proxy}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-[#050609]/80 border border-white/5 rounded-2xl p-4 md:p-6 shadow-md overflow-hidden space-y-6" id="proxy-manager-workspace">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-5">
+                    <div>
+                      <h3 className="font-display font-bold text-sm md:text-base text-white flex items-center gap-2">
+                        <Globe className="w-4 h-4 text-brand-primary animate-pulse" />
+                        Global Proxy Workspace
+                      </h3>
+                      <p className="text-[11px] text-gray-400 mt-1 font-sans">
+                        Route automation nodes through SOCKS5/HTTP tunnels to bypass matchmaking rate-limits.
+                      </p>
+                    </div>
+                    <button 
+                      onClick={handleTestAllProxies}
+                      disabled={proxies.some(p => p.status === "testing")}
+                      className="self-start sm:self-center px-3.5 py-2 rounded-xl bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-[11px] font-mono font-bold border border-brand-primary/20 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                      id="btn-test-all-proxies"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${proxies.some(p => p.status === "testing") ? "animate-spin" : ""}`} />
+                      Test All Proxies
+                    </button>
+                  </div>
+
+                  {/* Grid for Form + List */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Form - Left Side (4 columns) */}
+                    <div className="lg:col-span-4 bg-white/[0.01] border border-white/5 rounded-2xl p-4 space-y-4" id="proxy-add-form-container">
+                      <h4 className="text-xs font-mono font-bold text-gray-300 uppercase tracking-wider pb-2 border-b border-white/5">
+                        Add Proxy Tunnel
+                      </h4>
+                      
+                      <form onSubmit={handleAddProxy} className="space-y-4">
+                        {/* IP and Port */}
+                        <div className="space-y-2">
+                          <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider font-bold">
+                            IP Address & Port
+                          </label>
+                          <div className="grid grid-cols-3 gap-2">
+                            <input 
+                              type="text"
+                              required
+                              value={proxyIp}
+                              onChange={(e) => setProxyIp(e.target.value)}
+                              placeholder="192.168.1.1"
+                              className="col-span-2 bg-white/[0.03] border border-white/10 focus:border-brand-primary/50 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 font-mono"
+                              id="proxy-ip-input"
+                            />
+                            <input 
+                              type="text"
+                              required
+                              value={proxyPort}
+                              onChange={(e) => setProxyPort(e.target.value)}
+                              placeholder="1080"
+                              className="bg-white/[0.03] border border-white/10 focus:border-brand-primary/50 rounded-xl px-2 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 font-mono"
+                              id="proxy-port-input"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Protocol Selection */}
+                        <div className="space-y-2">
+                          <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider font-bold">
+                            Protocol
+                          </label>
+                          <div className="grid grid-cols-4 gap-1 bg-white/[0.02] p-1 rounded-xl border border-white/5">
+                            {(["HTTP", "HTTPS", "SOCKS4", "SOCKS5"] as const).map((proto) => (
+                              <button
+                                key={proto}
+                                type="button"
+                                onClick={() => setProxyType(proto)}
+                                className={`py-1.5 rounded-lg text-[9px] font-mono font-bold transition-all cursor-pointer ${
+                                  proxyType === proto 
+                                    ? "bg-brand-primary text-black" 
+                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                                }`}
+                              >
+                                {proto}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Optional Authentication */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider font-bold">
+                              Credentials (Optional)
+                            </label>
+                            <span className="text-[8px] text-gray-500 font-mono font-semibold">Basic Auth</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <input 
+                              type="text"
+                              value={proxyUsername}
+                              onChange={(e) => setProxyUsername(e.target.value)}
+                              placeholder="user"
+                              className="bg-white/[0.03] border border-white/10 focus:border-brand-primary/50 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 font-mono"
+                              id="proxy-username-input"
+                            />
+                            <input 
+                              type="password"
+                              value={proxyPassword}
+                              onChange={(e) => setProxyPassword(e.target.value)}
+                              placeholder="pass"
+                              className="bg-white/[0.03] border border-white/10 focus:border-brand-primary/50 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 font-mono"
+                              id="proxy-password-input"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Bind to Account */}
+                        <div className="space-y-2">
+                          <label className="block text-[10px] font-mono text-gray-400 uppercase tracking-wider font-bold">
+                            Assign to Active Account Slot
+                          </label>
+                          <select
+                            value={proxyAssignedAccount}
+                            onChange={(e) => setProxyAssignedAccount(e.target.value)}
+                            className="w-full bg-[#090b11] border border-white/10 focus:border-brand-primary/50 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 font-mono cursor-pointer"
+                            id="proxy-account-assign-select"
+                          >
+                            <option value="None">-- Unassigned --</option>
+                            {accounts.map(acc => (
+                              <option key={acc.id} value={acc.id}>{acc.username}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <button
+                          type="submit"
+                          className="w-full mt-2 py-2.5 rounded-xl bg-brand-primary text-black font-sans font-bold text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-brand-primary/10"
+                          id="btn-add-proxy-submit"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Add Node Tunnel
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* List - Right Side (8 columns) */}
+                    <div className="lg:col-span-8 space-y-3">
+                      <div className="flex justify-between items-center text-gray-400 text-[10px] font-mono font-bold uppercase tracking-wider pb-2 border-b border-white/5">
+                        <span>Active Proxy Nodes</span>
+                        <span>Configured: {proxies.length}</span>
+                      </div>
+
+                      <div className="max-h-[380px] overflow-y-auto space-y-2 pr-1" id="proxy-scroll-list">
+                        {proxies.length === 0 ? (
+                          <div className="py-12 text-center text-gray-500 font-mono text-xs">
+                            No proxies configured. Add a proxy to route your client traffic.
+                          </div>
+                        ) : (
+                          proxies.map((prx) => {
+                            const assignedAcc = accounts.find(a => a.id === prx.assignedTo);
+                            return (
+                              <div 
+                                key={prx.id}
+                                className="p-3.5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3"
+                                id={`proxy-node-${prx.id}`}
+                              >
+                                {/* Left: Info */}
+                                <div className="flex items-start gap-3">
+                                  <div className="w-8 h-8 rounded-lg bg-brand-primary/5 border border-brand-primary/10 flex items-center justify-center shrink-0 text-brand-primary mt-0.5">
+                                    <Globe className="w-4 h-4" />
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono text-xs font-bold text-white tracking-wide">
+                                        {prx.ip}:{prx.port}
+                                      </span>
+                                      <span className={`px-1.5 py-0.2 rounded font-mono text-[8px] font-extrabold tracking-widest ${
+                                        prx.type.startsWith("SOCKS") 
+                                          ? "bg-purple-500/10 text-purple-400 border border-purple-500/25" 
+                                          : "bg-cyan-500/10 text-cyan-400 border border-cyan-500/25"
+                                      }`}>
+                                        {prx.type}
+                                      </span>
+                                      {(prx.username || prx.password) && (
+                                        <span className="px-1 py-0.2 rounded bg-white/5 border border-white/10 text-gray-400 text-[8px] font-mono" title="Requires Authentication">
+                                          AUTH
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-3 mt-1.5">
+                                      {/* Link picker */}
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-[9px] text-gray-500 font-mono">Assigned To:</span>
+                                        <select
+                                          value={prx.assignedTo || "None"}
+                                          onChange={(e) => handleAssignProxyToAccount(prx.id, e.target.value)}
+                                          className="bg-[#090b11] border border-white/5 hover:border-white/20 rounded px-1.5 py-0.5 text-[10px] text-gray-300 font-mono focus:outline-none focus:ring-0 cursor-pointer"
+                                        >
+                                          <option value="None">None</option>
+                                          {accounts.map(acc => (
+                                            <option key={acc.id} value={acc.id}>{acc.username}</option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Right: Status & Actions */}
+                                <div className="flex items-center justify-between md:justify-end gap-4 shrink-0 border-t md:border-t-0 border-white/5 pt-2.5 md:pt-0">
+                                  {/* Status display */}
+                                  <div className="flex items-center gap-1.5">
+                                    {prx.status === "testing" ? (
+                                      <>
+                                        <Activity className="w-3.5 h-3.5 text-brand-primary animate-pulse" />
+                                        <span className="font-mono text-[10px] text-brand-primary font-bold">Testing...</span>
+                                      </>
+                                    ) : prx.status === "online" ? (
+                                      <>
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                        <div className="text-left">
+                                          <span className="block font-mono text-[10px] text-emerald-400 font-bold leading-tight">Online</span>
+                                          <span className="block font-mono text-[9px] text-gray-500 leading-tight">{prx.latency}ms latency</span>
+                                        </div>
+                                      </>
+                                    ) : prx.status === "offline" ? (
+                                      <>
+                                        <XCircle className="w-3.5 h-3.5 text-red-400" />
+                                        <span className="font-mono text-[10px] text-red-400 font-bold">Failed/Timeout</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+                                        <span className="font-mono text-[10px] text-gray-400">Idle / Ready</span>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* Buttons */}
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      onClick={() => handleTestProxy(prx.id)}
+                                      disabled={prx.status === "testing"}
+                                      className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 hover:text-white transition-all cursor-pointer disabled:opacity-50"
+                                      title="Test latency"
+                                      id={`btn-test-proxy-${prx.id}`}
+                                    >
+                                      <Wifi className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteProxy(prx.id)}
+                                      className="p-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all cursor-pointer"
+                                      title="Remove proxy"
+                                      id={`btn-delete-proxy-${prx.id}`}
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Resource Monitor Indicators */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4" id="resource-stats">
