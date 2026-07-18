@@ -1,0 +1,6 @@
+{
+  "name": "PRO DIGITAL°",
+  "description": "Premium landing page clone of PRO DIGITAL°, the advanced Counter-Strike 2 Case Farming and Account Automation Bot, featuring interactive ROI calculators, real-time farm simulators, and responsive mock dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

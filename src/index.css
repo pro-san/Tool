@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --brand-primary: #a3e635; /* lime-400 */
+  --brand-secondary: #06b6d4; /* cyan-500 */
+  --brand-accent: #8b5cf6; /* violet-500 */
+  --bg-primary: #040508;
+  --bg-secondary: #08090d;
+  --bg-tertiary: #11141a;
+  --brand-primary-rgb: 163, 230, 53;
+  --brand-secondary-rgb: 6, 182, 212;
+}
+
+.theme-midnight {
+  --brand-primary: #00f2fe; /* electric cyan */
+  --brand-secondary: #a855f7; /* neon violet */
+  --brand-accent: #ec4899; /* hot pink */
+  --bg-primary: #050714; /* deep navy midnight */
+  --bg-secondary: #0a0d24; /* navy card bg */
+  --bg-tertiary: #12183c; /* lighter navy */
+  --brand-primary-rgb: 0, 242, 254;
+  --brand-secondary-rgb: 168, 85, 247;
+}
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-accent: var(--brand-accent);
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+}
+
+/* Custom styles for glowing details and clean elements */
+.glow-green {
+  box-shadow: 0 0 20px rgba(var(--brand-primary-rgb), 0.15);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(var(--brand-secondary-rgb), 0.15);
+}
+
+.glow-text-green {
+  text-shadow: 0 0 8px rgba(var(--brand-primary-rgb), 0.4);
+}
+
+.grid-bg {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+body {
+  background-color: #040508;
+  color: #f1f5f9;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #040508;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a3e635;
+}
