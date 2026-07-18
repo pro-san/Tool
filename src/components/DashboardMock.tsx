@@ -101,6 +101,9 @@ export default function DashboardMock() {
   const [selectedMailDetail, setSelectedMailDetail] = useState<SyncedMail | null>(null);
   const [selectedFilterProvider, setSelectedFilterProvider] = useState<"All" | "Gmail" | "Hotmail" | "Outlook" | "Yahoo" | "Custom">("All");
   const [searchMailQuery, setSearchMailQuery] = useState<string>("");
+  const [selectedEditEmailAccId, setSelectedEditEmailAccId] = useState<string | null>(null);
+  const [editEmailAddress, setEditEmailAddress] = useState<string>("");
+  const [editEmailProvider, setEditEmailProvider] = useState<"Gmail" | "Hotmail" | "Outlook" | "Yahoo" | "Custom">("Gmail");
 
   interface ProxyItem {
     id: string;
@@ -470,6 +473,21 @@ export default function DashboardMock() {
     }, 1300);
   };
 
+  const handleUpdateAccountMail = (accId: string, email: string, provider: string) => {
+    setAccounts(prev => prev.map(acc => {
+      if (acc.id === accId) {
+        return {
+          ...acc,
+          sellerEmail: email,
+          emailProvider: provider
+        };
+      }
+      return acc;
+    }));
+    addLog(`[MAIL] Configured ${email} (${provider}) for active slot account.`);
+    setSelectedEditEmailAccId(null);
+  };
+
   const handleForceSyncMails = () => {
     addLog(`[MAIL] Initializing batch synchronizer across Gmail, Hotmail, Outlook, Yahoo IMAP servers...`);
     setIsMailTesting("all");
@@ -759,6 +777,18 @@ export default function DashboardMock() {
                   <Globe className="w-3.5 h-3.5" />
                   PROXY WORKSPACE ({proxies.length})
                 </button>
+                <button
+                  onClick={() => setActiveTab("mail")}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-2 border ${
+                    activeTab === "mail"
+                      ? "bg-brand-primary/10 border-brand-primary/20 text-brand-primary"
+                      : "bg-transparent border-transparent text-gray-400 hover:text-white"
+                  }`}
+                  id="tab-btn-mail"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  MAIL WORKSPACE ({syncedMails.length})
+                </button>
               </div>
 
               {activeTab === "accounts" ? (
@@ -880,7 +910,7 @@ export default function DashboardMock() {
                     </table>
                   </div>
                 </div>
-              ) : (
+              ) : activeTab === "proxies" ? (
                 <div className="bg-[#050609]/80 border border-white/5 rounded-2xl p-4 md:p-6 shadow-md overflow-hidden space-y-6" id="proxy-manager-workspace">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-5">
                     <div>
@@ -1138,6 +1168,382 @@ export default function DashboardMock() {
                           })
                         )}
                       </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-[#050609]/80 border border-white/5 rounded-2xl p-4 md:p-6 shadow-md overflow-hidden space-y-6" id="mail-workspace-container">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-5">
+                    <div>
+                      <h3 className="font-display font-bold text-sm md:text-base text-white flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-brand-primary animate-pulse" />
+                        Seller Mail Authentication Tunnels
+                      </h3>
+                      <p className="text-[11px] text-gray-400 mt-1 font-sans">
+                        Auto-extract Steam Guard codes and community marketplace verification payloads across Gmail, Yahoo, Hotmail, and Outlook.
+                      </p>
+                    </div>
+                    <button 
+                      onClick={handleForceSyncMails}
+                      disabled={isMailTesting === "all"}
+                      className="self-start sm:self-center px-4 py-2 rounded-xl bg-brand-primary text-black text-xs font-semibold hover:opacity-90 transition-all cursor-pointer flex items-center gap-2 shadow-lg shadow-brand-primary/10 disabled:opacity-50"
+                      id="btn-sync-all-mails"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isMailTesting === "all" ? "animate-spin" : ""}`} />
+                      Force IMAP Synchronize
+                    </button>
+                  </div>
+
+                  {/* Outer Grid: Mail Accounts and Mailbox list */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Column Left: Linked Mail Configurations (5 cols) */}
+                    <div className="lg:col-span-5 space-y-4" id="mail-configs-setup-panel">
+                      <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                        <h4 className="text-xs font-mono font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+                          <Settings className="w-3.5 h-3.5 text-gray-400" />
+                          Seller Account Mail Slots
+                        </h4>
+                        <span className="text-[10px] text-gray-500 font-mono font-semibold">Active Nodes</span>
+                      </div>
+
+                      <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+                        {accounts.map((acc) => {
+                          const isEditing = selectedEditEmailAccId === acc.id;
+                          return (
+                            <div 
+                              key={acc.id}
+                              className={`p-3 rounded-xl border transition-all ${
+                                isEditing 
+                                  ? "bg-brand-primary/5 border-brand-primary/30" 
+                                  : "bg-white/[0.01] border-white/5 hover:border-white/10"
+                              }`}
+                              id={`mail-config-slot-${acc.id}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded bg-white/5 border border-white/10 flex items-center justify-center font-mono font-bold text-xs text-brand-primary">
+                                    {acc.username[0]}
+                                  </div>
+                                  <span className="font-mono text-xs font-bold text-white truncate max-w-[120px]">
+                                    {acc.username}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {acc.sellerEmail && (
+                                    <span className={`px-1.5 py-0.2 rounded text-[8px] font-mono font-extrabold tracking-wider ${
+                                      acc.emailProvider === "Gmail" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
+                                      acc.emailProvider === "Hotmail" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" :
+                                      acc.emailProvider === "Outlook" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
+                                      acc.emailProvider === "Yahoo" ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" :
+                                      "bg-white/5 text-gray-400 border border-white/10"
+                                    }`}>
+                                      {acc.emailProvider}
+                                    </span>
+                                  )}
+                                  <span className="px-1 py-0.2 rounded bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[8px] font-mono font-bold">
+                                    IMAP
+                                  </span>
+                                </div>
+                              </div>
+
+                              {isEditing ? (
+                                <div className="mt-3 pt-3 border-t border-white/5 space-y-3">
+                                  <div className="space-y-1">
+                                    <label className="block text-[9px] font-mono text-gray-400 uppercase font-bold">Seller Email Address</label>
+                                    <input 
+                                      type="email"
+                                      value={editEmailAddress}
+                                      onChange={(e) => setEditEmailAddress(e.target.value)}
+                                      placeholder="example@gmail.com"
+                                      className="w-full bg-[#090b11] border border-white/10 focus:border-brand-primary/50 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 font-mono"
+                                      id={`edit-email-input-${acc.id}`}
+                                    />
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <label className="block text-[9px] font-mono text-gray-400 uppercase font-bold">Mail Provider</label>
+                                    <div className="grid grid-cols-5 gap-1">
+                                      {(["Gmail", "Hotmail", "Outlook", "Yahoo", "Custom"] as const).map((prov) => (
+                                        <button
+                                          key={prov}
+                                          type="button"
+                                          onClick={() => setEditEmailProvider(prov)}
+                                          className={`py-1 rounded-md text-[8px] font-mono font-bold transition-all ${
+                                            editEmailProvider === prov 
+                                              ? "bg-brand-primary text-black" 
+                                              : "bg-white/5 text-gray-400 hover:text-white"
+                                          }`}
+                                        >
+                                          {prov}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center justify-end gap-2 pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedEditEmailAccId(null)}
+                                      className="px-2 py-1 rounded text-[10px] font-mono text-gray-400 hover:text-white cursor-pointer"
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleUpdateAccountMail(acc.id, editEmailAddress, editEmailProvider)}
+                                      className="px-2.5 py-1 rounded bg-brand-primary text-black text-[10px] font-mono font-bold hover:opacity-90 transition-opacity cursor-pointer"
+                                    >
+                                      Save Config
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="mt-2.5 flex items-center justify-between gap-2 text-[11px]">
+                                  <div className="min-w-0 flex-1">
+                                    {acc.sellerEmail ? (
+                                      <span className="font-mono text-gray-400 block truncate" title={acc.sellerEmail}>
+                                        {acc.sellerEmail}
+                                      </span>
+                                    ) : (
+                                      <span className="font-sans text-gray-500 italic block">No email address configured</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    {acc.sellerEmail && (
+                                      <button
+                                        onClick={() => handleTestAccountMailConnection(acc.id, acc.sellerEmail || "", acc.emailProvider || "Gmail")}
+                                        disabled={isMailTesting === acc.id}
+                                        className="px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white font-mono text-[9px] transition-all cursor-pointer flex items-center gap-1 border border-white/5 disabled:opacity-50"
+                                        title="Verify IMAP"
+                                      >
+                                        <Wifi className={`w-2.5 h-2.5 text-brand-primary ${isMailTesting === acc.id ? "animate-pulse" : ""}`} />
+                                        Verify
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => {
+                                        setSelectedEditEmailAccId(acc.id);
+                                        setEditEmailAddress(acc.sellerEmail || "");
+                                        setEditEmailProvider((acc.emailProvider as any) || "Gmail");
+                                      }}
+                                      className="px-1.5 py-0.5 rounded bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary font-mono text-[9px] transition-all cursor-pointer flex items-center gap-1 border border-brand-primary/25"
+                                    >
+                                      <Settings className="w-2.5 h-2.5" />
+                                      Setup
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Column Right: Message Inbox and Token Parser (7 cols) */}
+                    <div className="lg:col-span-7 space-y-4" id="verification-inbox-panel">
+                      {/* Search and Filters */}
+                      <div className="space-y-3 bg-white/[0.01] border border-white/5 rounded-xl p-3">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={searchMailQuery}
+                            onChange={(e) => setSearchMailQuery(e.target.value)}
+                            placeholder="Search inbox logs by recipient, subject, or code..."
+                            className="w-full bg-[#050609]/90 border border-white/10 focus:border-brand-primary/50 rounded-xl pl-3 pr-8 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 font-mono"
+                            id="mail-inbox-search"
+                          />
+                          <Mail className="absolute right-2.5 top-2.5 w-3.5 h-3.5 text-gray-500" />
+                        </div>
+
+                        {/* Filter tabs */}
+                        <div className="flex flex-wrap items-center gap-1 border-t border-white/5 pt-2">
+                          <span className="text-[9px] font-mono text-gray-500 uppercase font-bold mr-1.5">Filter:</span>
+                          {(["All", "Gmail", "Hotmail", "Outlook", "Yahoo", "Custom"] as const).map((prov) => (
+                            <button
+                              key={prov}
+                              onClick={() => setSelectedFilterProvider(prov)}
+                              className={`px-2 py-1 rounded text-[9px] font-mono font-semibold transition-all cursor-pointer ${
+                                selectedFilterProvider === prov
+                                  ? "bg-brand-primary text-black font-extrabold"
+                                  : "bg-white/5 text-gray-400 hover:text-white"
+                              }`}
+                            >
+                              {prov}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Mail list */}
+                      <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1" id="mail-inbox-scroll">
+                        {syncedMails.filter(m => {
+                          const matchesProvider = selectedFilterProvider === "All" || m.provider === selectedFilterProvider;
+                          const query = searchMailQuery.toLowerCase();
+                          const matchesQuery = !query || 
+                            m.recipient.toLowerCase().includes(query) ||
+                            m.subject.toLowerCase().includes(query) ||
+                            (m.code && m.code.toLowerCase().includes(query)) ||
+                            m.accountUsername.toLowerCase().includes(query);
+                          return matchesProvider && matchesQuery;
+                        }).length === 0 ? (
+                          <div className="py-12 text-center text-gray-500 font-mono text-xs">
+                            No synced messages found matching filters.
+                          </div>
+                        ) : (
+                          syncedMails
+                            .filter(m => {
+                              const matchesProvider = selectedFilterProvider === "All" || m.provider === selectedFilterProvider;
+                              const query = searchMailQuery.toLowerCase();
+                              const matchesQuery = !query || 
+                                m.recipient.toLowerCase().includes(query) ||
+                                m.subject.toLowerCase().includes(query) ||
+                                (m.code && m.code.toLowerCase().includes(query)) ||
+                                m.accountUsername.toLowerCase().includes(query);
+                              return matchesProvider && matchesQuery;
+                            })
+                            .map((mail) => {
+                              const isSelected = selectedMailDetail?.id === mail.id;
+                              return (
+                                <div
+                                  key={mail.id}
+                                  onClick={() => setSelectedMailDetail(isSelected ? null : mail)}
+                                  className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3 ${
+                                    isSelected 
+                                      ? "bg-brand-primary/10 border-brand-primary/30" 
+                                      : "bg-white/[0.01] border-white/5 hover:bg-white/[0.03] hover:border-white/10"
+                                  }`}
+                                  id={`mail-record-${mail.id}`}
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-mono text-[10px] text-gray-400">
+                                        [{mail.accountUsername}]
+                                      </span>
+                                      <span className={`px-1 rounded text-[8px] font-mono font-bold ${
+                                        mail.provider === "Gmail" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
+                                        mail.provider === "Hotmail" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" :
+                                        mail.provider === "Outlook" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
+                                        mail.provider === "Yahoo" ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" :
+                                        "bg-white/5 text-gray-400 border border-white/10"
+                                      }`}>
+                                        {mail.provider}
+                                      </span>
+                                      <span className="text-[10px] text-gray-500 font-mono font-semibold ml-auto md:ml-0">
+                                        {mail.receivedTime}
+                                      </span>
+                                    </div>
+                                    <div className="text-white text-xs font-semibold mt-1 truncate" title={mail.subject}>
+                                      {mail.subject}
+                                    </div>
+                                    <div className="text-gray-400 text-[11px] font-mono truncate mt-0.5">
+                                      To: {mail.recipient}
+                                    </div>
+                                  </div>
+
+                                  {/* Code Token display */}
+                                  <div className="flex items-center justify-between md:justify-end gap-3 shrink-0 border-t md:border-t-0 border-white/5 pt-2 md:pt-0">
+                                    {mail.code && (
+                                      <div className="px-2 py-1 rounded bg-amber-500/10 border border-amber-500/20 flex items-center gap-1 shrink-0">
+                                        <Key className="w-3 h-3 text-amber-400 shrink-0" />
+                                        <span className="font-mono text-[11px] font-extrabold text-amber-400 tracking-wider">
+                                          {mail.code}
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    <div className="flex items-center gap-1.5">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleTestMailConnection(mail.id);
+                                        }}
+                                        disabled={isMailTesting === mail.id}
+                                        className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 hover:text-white transition-all cursor-pointer disabled:opacity-50"
+                                        title="Verify server connection"
+                                      >
+                                        <Wifi className="w-3 h-3" />
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteMail(mail.id);
+                                          if (selectedMailDetail?.id === mail.id) setSelectedMailDetail(null);
+                                        }}
+                                        className="p-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all cursor-pointer"
+                                        title="Clear cache record"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })
+                        )}
+                      </div>
+
+                      {/* Selected Mail body parser panel */}
+                      {selectedMailDetail && (
+                        <div className="p-4 rounded-xl bg-[#090b11] border border-brand-primary/20 space-y-3 mt-3 animate-fade-in" id="mail-detail-inspector">
+                          <div className="flex items-start justify-between border-b border-white/5 pb-2.5">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-[10px] text-gray-400 uppercase font-semibold">Message Payload Inspector</span>
+                                <span className="px-1.5 py-0.2 rounded bg-brand-primary/15 border border-brand-primary/30 text-brand-primary text-[8px] font-mono font-bold uppercase tracking-wider">
+                                  Auto-Parsed
+                                </span>
+                              </div>
+                              <h5 className="text-white text-xs font-bold font-sans mt-1">
+                                {selectedMailDetail.subject}
+                              </h5>
+                              <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                                From: {selectedMailDetail.sender} | Recipient: {selectedMailDetail.recipient}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => setSelectedMailDetail(null)}
+                              className="text-gray-500 hover:text-white transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {/* Extracted block banner */}
+                          {selectedMailDetail.code && (
+                            <div className="p-3 rounded-lg bg-brand-primary/5 border border-brand-primary/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded bg-brand-primary/10 border border-brand-primary/25 flex items-center justify-center text-brand-primary shrink-0">
+                                  <Lock className="w-4 h-4 animate-pulse" />
+                                </div>
+                                <div>
+                                  <span className="block text-[9px] font-mono text-brand-primary uppercase tracking-wider font-extrabold">Steam Account Security Token</span>
+                                  <span className="font-mono text-sm font-black text-white tracking-widest block mt-0.5">
+                                    {selectedMailDetail.code}
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(selectedMailDetail.code || "");
+                                  addLog(`[CLIPBOARD] Copied extracted token ${selectedMailDetail.code} to host clipboard.`);
+                                }}
+                                className="px-3 py-1.5 rounded-lg bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-[10px] font-mono font-bold border border-brand-primary/20 hover:border-brand-primary/30 transition-all flex items-center gap-1.5 self-end sm:self-auto cursor-pointer"
+                              >
+                                <Check className="w-3 h-3" />
+                                Copy Token
+                              </button>
+                            </div>
+                          )}
+
+                          <div className="space-y-1">
+                            <label className="block text-[9px] font-mono text-gray-500 uppercase font-bold">Body Context (Plaintext Decoded)</label>
+                            <div className="p-3 rounded-lg bg-[#050609] border border-white/5 font-mono text-[11px] text-gray-300 leading-relaxed whitespace-pre-wrap max-h-[140px] overflow-y-auto">
+                              {selectedMailDetail.body}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
